@@ -78,6 +78,7 @@ Compute_Zeta_Two_Models <- function(y_centered,
     as.numeric(y_centered - X_centered %*% beta_lasso_origial)
   newY <- diag(newy) %*% X_centered %*% diag(sdxinv)
   
+  # The covariate part
   Y_all_cur <- X_centered_all_data %*% beta_lasso_for_m_current
   XX2_cur <-
     diag(c(Y_all_cur)) %*% X_centered_all_data %*% diag(sdxinv)
@@ -107,5 +108,18 @@ Compute_Zeta_Two_Models <- function(y_centered,
       zeta_new[i] - colMeans(XX_new) %*% coef(fit_new)[-1]
   }
   
-  return(zeta_new)
+  return(list(Zeta_New = zeta_new, XX2 = XX2, BB = BB))
+}
+
+Compute_Omega_Hat <- function(X_original_mat, num_of_labeled)
+{
+  n <- num_of_labeled
+  N <- nrow(X_original_mat) - n
+  
+  X_n1 <- scale(X_original_mat[1:n, ], center = T, scale = T)
+  X_new <- scale(X, center = T, scale = T)
+  sigma_n <- t(X_new) %*% X_new / (n + N)
+  M <- InverseLinfty(sigma_n, n+N, resol = 1.2, maxiter = 50, threshold=1e-2, verbose=T)
+  
+  return(M)
 }
