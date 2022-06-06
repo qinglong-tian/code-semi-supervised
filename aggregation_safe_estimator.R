@@ -44,20 +44,36 @@ beta_ll <- Fit_Lasso(y_centered = y1, X_centered = Xs)
 Xs_E3 <- Xs
 Xs_E3[, 3] <- 0
 beta_ll_E3 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E3)
+# Compute Zeta for the Lasso estimator with zero column 3
+zeta_new_E3 <-
+  Compute_Zeta(
+    y_centered = y1,
+    X_centered = Xs,
+    beta_lasso_original = beta_ll,
+    beta_lasso_for_m = beta_ll_E3,
+    X_centered_all_data = Xs2
+  )$Zeta_New
 
 ## Setting 2: (1,3,5,6)
 Xs_E4 <- Xs
 Xs_E4[, 4] <- 0
 beta_ll_E4 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E4)
+# Compute Zeta for the Lasso estimator with zero column 3
+zeta_new_E4 <-
+  Compute_Zeta(
+    y_centered = y1,
+    X_centered = Xs,
+    beta_lasso_original = beta_ll,
+    beta_lasso_for_m = beta_ll_E4,
+    X_centered_all_data = Xs2
+  )$Zeta_New
 
-
-
-# Implement the safe estimator (individually): copy the code
-newy <-
-  as.numeric(y1 - Xs[c(1:n), ] %*% beta_ll) # $Y_i-X_i^T\hat{\theta}_L$
-sdxinv <-
-  1 / sqrt(colSums(Xs ^ 2) / (n - 1)) # Sd of each covaraite (column)
-newY <-
-  diag(newy) %*% Xs[1:n, ] %*% diag(sdxinv) # $X_{ik}(Y_i-X_i^T\hat{\theta}_L)$
-
-## Implement the aggregation of safe estimators
+#
+Compute_Zeta_Two_Models(
+  y_centered = y1,
+  X_centered = Xs,
+  beta_lasso_origial = beta_ll,
+  beta_lasso_for_m_current = beta_ll_E3,
+  beta_lasso_for_m_next = beta_ll_E4,
+  X_centered_all_data = Xs2
+) -> zeta_new_two_models
