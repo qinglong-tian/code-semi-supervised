@@ -68,7 +68,7 @@ zeta_new_E4 <-
     X_centered_all_data = Xs2
   )$Zeta_New
 
-#
+## Setting 3: Combining settings 1 and 2
 Compute_Zeta_Two_Models(
   y_centered = y1,
   X_centered = Xs,
@@ -76,4 +76,42 @@ Compute_Zeta_Two_Models(
   beta_lasso_for_m_current = beta_ll_E3,
   beta_lasso_for_m_next = beta_ll_E4,
   X_centered_all_data = Xs2
-) -> zeta_new_two_models
+) -> zeta_new_two_models_list
+zeta_new_two_models <- zeta_new_two_models_list$Zeta_New
+
+### Estimate Omega
+omegaHat <- Compute_Omega_Hat(X, n)
+
+### The paper says that we should use (3.17) for the inference
+### But the \theta_L in (3.17) can be other estimator
+### Here we can use both the standard lasso estimator and the \theta_S
+
+# Use Standard lasso
+beta_for_debias <- beta_ll
+
+# Use \theta_S in (4.1) of the manuscript
+dantzig_n2 <-
+  dantz(
+    X[c(1:n), ],
+    y1,
+    zeta_new_two_models_list$Zeta_New,
+    lambda.min.ratio = ratio,
+    nlambda = 50,
+    clam = 1,
+    verbose = T
+  ) # Equation 4.1
+beta_n2 <- dantzig_n2$beta
+chooselam <-
+  cv_nonadd(
+    nfolds = 5,
+    XX2 = zeta_new_two_models_list$XX2,
+    Xs = Xs,
+    y1 = y1,
+    zetafull = zeta_new_two_models_list$Zeta_New,
+    BB = zeta_new_two_models_list$BB,
+    nlambda = 50,
+    ratio = ratio
+  )
+clam <- chooselam$lambda.min
+beta_for_debias <- beta_n2[, clam]
+
