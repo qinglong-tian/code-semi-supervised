@@ -2,16 +2,17 @@
 setwd("legacy/")
 source("nec.R")
 setwd("../")
+source("aggregation_aux_functions.R")
 
 ## The data setting: copy from the previous code; data generating
 # Factor levels
-n = 200
-p = 500
-alpha = 0.05
-N = 200
-ratio = 0.08
-nlam = 10
-df = 5
+n <- 200
+p <- 500
+alpha <- 0.05
+N <- 200
+ratio <- 0.08
+nlam <- 10
+df <- 5
 an <- 30000
 set.seed(7)
 
@@ -34,32 +35,29 @@ Xs <-
 Xs2 <-
   scale(X, scale = F) #  Centering the X (each column) using both observed and unobserved data
 
-# Two settings: two sets of lasso
-## Total (1,3,4,5,6)
+# Three settings: two sets of lasso
+## Total (1,3,4,5,6): this one is used as the "\theta_L" in (3.15)
+beta_ll <- Fit_Lasso(y_centered = y1, X_centered = Xs)
 
+## The next two settings are used to compute "\hat{m}(\cdot)" in (3.15)
 ## Setting 1: (1,4,5,6)
 Xs_E3 <- Xs
 Xs_E3[, 3] <- 0
-
-fit_b_E3 <- glmnet(
-  Xs_E3,
-  y1,
-  family = "gaussian",
-  lambda =
-    cv.glmnet(Xs_E3, y1, family = "gaussian")$lambda.1se
-)
-beta_ll_E3 <- coef(fit_b_E3)[-1] # Lasso coefficients
+beta_ll_E3 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E3)
 
 ## Setting 2: (1,3,5,6)
 Xs_E4 <- Xs
 Xs_E4[, 4] <- 0
+beta_ll_E4 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E4)
 
-fit_b_E4 <-
-  glmnet(
-    Xs_E4,
-    y1,
-    family = "gaussian",
-    lambda = cv.glmnet(Xs_E4, y1, family = "gaussian")$lambda.1se
-  )
-beta_ll_E4 <- coef(fit_b_E4)[-1] # Lasso coefficients
 
+
+# Implement the safe estimator (individually): copy the code
+newy <-
+  as.numeric(y1 - Xs[c(1:n), ] %*% beta_ll) # $Y_i-X_i^T\hat{\theta}_L$
+sdxinv <-
+  1 / sqrt(colSums(Xs ^ 2) / (n - 1)) # Sd of each covaraite (column)
+newY <-
+  diag(newy) %*% Xs[1:n, ] %*% diag(sdxinv) # $X_{ik}(Y_i-X_i^T\hat{\theta}_L)$
+
+## Implement the aggregation of safe estimators
