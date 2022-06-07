@@ -108,7 +108,11 @@ Compute_Zeta_Two_Models <- function(y_centered,
       zeta_new[i] - colMeans(XX_new) %*% coef(fit_new)[-1]
   }
   
-  return(list(Zeta_New = zeta_new, XX2 = XX2, BB = BB))
+  return(list(
+    Zeta_New = zeta_new,
+    XX2 = XX2,
+    BB = BB
+  ))
 }
 
 Compute_Omega_Hat <- function(X_original_mat, num_of_labeled)
@@ -119,7 +123,57 @@ Compute_Omega_Hat <- function(X_original_mat, num_of_labeled)
   X_n1 <- scale(X_original_mat[1:n, ], center = T, scale = T)
   X_new <- scale(X, center = T, scale = T)
   sigma_n <- t(X_new) %*% X_new / (n + N)
-  M <- InverseLinfty(sigma_n, n+N, resol = 1.2, maxiter = 50, threshold=1e-2, verbose=T)
+  M <-
+    InverseLinfty(
+      sigma_n,
+      n + N,
+      resol = 1.2,
+      maxiter = 50,
+      threshold = 1e-2,
+      verbose = T
+    )
   
   return(M)
 }
+
+Compute_Debias_Safe_Estimator <- function(beta_for_debias,
+                                          omega_hat,
+                                          zeta_new,
+                                          x_mat_original,
+                                          sdxinv,
+                                          n)
+  # beta_for_debias could be \theta_S or lasso estimators
+{
+  X_n1 <- scale(x_mat_original[1:n, ], center = T, scale = T)
+  Xs <- scale(x_mat_original[1:n, ], scale = F)
+  
+  c(beta_for_debias + omega_hat %*% (zeta_new - t(X_n1) %*% Xs %*% beta_for_debias /
+                                       n) * sdxinv)
+}
+
+Compute_SE_Debias_Safe_Estimator <- function(y_centered,
+                                             x_mat_original,
+                                             beta_hat_for_var,
+                                             omega_hat,
+                                             BB_in_zeta,
+                                             XX2_in_zeta,
+                                             sdxinv)
+{
+  n <- length(y_centered)
+  N <- nrow(x_mat_original) - n
+  
+  Xs <- scale(x_mat_original[1:n, ], scale = F)
+  X_n1 <- scale(x_mat_original[1:n, ], center = T, scale = T)
+  XXs <- scale(XX2_in_zeta[1:n, ], scale = F)
+  
+  AA <- diag(c(y_centered - Xs %*% beta_hat_for_var)) %*% X_n1
+  Ar <- (AA - XXs %*% BB_in_zeta)
+  var1 <-
+    omega_hat %*% (N / (n + N) * cov(Ar)) %*% t(omega_hat) + n / (n + N) *
+    omega_hat * cov(AA) %*% t(omega_hat)
+  se1 <- sqrt(diag(var1)) / sqrt(n) * sdxinv
+  
+  return(se1)
+}
+
+

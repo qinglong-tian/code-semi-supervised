@@ -31,9 +31,10 @@ Ytrue <-
 y1 <-
   scale(data1$y[c(1:n)], center = T, scale = F) # Centering Y using only the observed data
 Xs <-
-  scale(X[c(1:n), ], scale = F) # Centering X using only the observed data
+  scale(X[c(1:n),], scale = F) # Centering X using only the observed data
 Xs2 <-
   scale(X, scale = F) #  Centering the X (each column) using both observed and unobserved data
+sdxinv <- 1/sqrt(colSums(Xs^2)/(n - 1))
 
 # Three settings: two sets of lasso
 ## Total (1,3,4,5,6): this one is used as the "\theta_L" in (3.15)
@@ -77,7 +78,6 @@ Compute_Zeta_Two_Models(
   beta_lasso_for_m_next = beta_ll_E4,
   X_centered_all_data = Xs2
 ) -> zeta_new_two_models_list
-zeta_new_two_models <- zeta_new_two_models_list$Zeta_New
 
 ### Estimate Omega
 omegaHat <- Compute_Omega_Hat(X, n)
@@ -92,7 +92,7 @@ beta_for_debias <- beta_ll
 # Use \theta_S in (4.1) of the manuscript
 dantzig_n2 <-
   dantz(
-    X[c(1:n), ],
+    X[c(1:n),],
     y1,
     zeta_new_two_models_list$Zeta_New,
     lambda.min.ratio = ratio,
@@ -115,3 +115,25 @@ chooselam <-
 clam <- chooselam$lambda.min
 beta_for_debias <- beta_n2[, clam]
 
+beta_debiased <- Compute_Debias_Safe_Estimator(
+  beta_for_debias = beta_for_debias,
+  omega_hat = omegaHat,
+  zeta_new = zeta_new_two_models_list$Zeta_New,
+  x_mat_original = X,
+  sdxinv = sdxinv,
+  n = n
+)
+
+se_beta_debiased <- Compute_SE_Debias_Safe_Estimator(
+  y_centered = y1,
+  x_mat_original = X,
+  beta_hat_for_var = beta_ll,
+  omega_hat = omegaHat,
+  BB_in_zeta = zeta_new_two_models_list$BB,
+  XX2_in_zeta = zeta_new_two_models_list$XX2,
+  sdxinv = sdxinv
+)
+
+lwb <- beta_debiased-qnorm(1-alpha/2)*se_beta_debiased
+upb <- beta_debiased+qnorm(1-alpha/2)*se_beta_debiased
+cp <- mean(beta_t>lwb & beta_t < upb)
