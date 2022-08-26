@@ -60,7 +60,7 @@ Compute_Zeta <- function(y_centered,
   }
   return(list(
     Zeta_New = zeta_new,
-    XX2 = XX_new,
+    XX2 = XX2,
     BB = BB
   ))
 }
