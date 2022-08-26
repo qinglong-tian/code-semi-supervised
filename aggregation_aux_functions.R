@@ -1,4 +1,5 @@
 Fit_Lasso <- function(y_centered, X_centered)
+  #
 {
   fit_b <- glmnet(
     X_centered,
@@ -39,8 +40,8 @@ Compute_Zeta <- function(y_centered,
   Y_all <- X_centered_all_data %*% beta_lasso_for_m
   XX2 <-
     diag(as.numeric(Y_all)) %*% X_centered_all_data %*% diag(sdxinv)
-  XXs <- scale(XX2[1:n,], scale = F)
-  XX_new <- scale(XX2, scale = F)[c(1:n),]
+  XXs <- scale(XX2[1:n, ], scale = F)
+  XX_new <- scale(XX2, scale = F)[c(1:n), ]
   
   zeta_new <-
     colMeans(diag(as.numeric(y_centered)) %*% X_centered %*% diag(sdxinv))
@@ -57,7 +58,11 @@ Compute_Zeta <- function(y_centered,
     zeta_new[i] <-
       zeta_new[i] - colMeans(XX_new) %*% coef(fit_new)[-1]
   }
-  return(list(Zeta_New = zeta_new, XX_new = XX_new))
+  return(list(
+    Zeta_New = zeta_new,
+    XX2 = XX_new,
+    BB = BB
+  ))
 }
 
 Compute_Zeta_Two_Models <- function(y_centered,
@@ -89,8 +94,8 @@ Compute_Zeta_Two_Models <- function(y_centered,
   
   XX2 <- cbind(XX2_cur, XX2_next)
   
-  XXs <- scale(XX2[1:n, ], scale = F)
-  XX_new <- scale(XX2, scale = F)[1:n, ]
+  XXs <- scale(XX2[1:n,], scale = F)
+  XX_new <- scale(XX2, scale = F)[1:n,]
   
   zeta_new <-
     colMeans(diag(as.numeric(y_centered)) %*% X_centered %*% diag(sdxinv))
@@ -120,7 +125,7 @@ Compute_Omega_Hat <- function(X_original_mat, num_of_labeled)
   n <- num_of_labeled
   N <- nrow(X_original_mat) - n
   
-  X_n1 <- scale(X_original_mat[1:n, ], center = T, scale = T)
+  X_n1 <- scale(X_original_mat[1:n,], center = T, scale = T)
   X_new <- scale(X, center = T, scale = T)
   sigma_n <- t(X_new) %*% X_new / (n + N)
   M <-
@@ -144,8 +149,8 @@ Compute_Debias_Safe_Estimator <- function(beta_for_debias,
                                           n)
   # beta_for_debias could be \theta_S or lasso estimators
 {
-  X_n1 <- scale(x_mat_original[1:n, ], center = T, scale = T)
-  Xs <- scale(x_mat_original[1:n, ], scale = F)
+  X_n1 <- scale(x_mat_original[1:n,], center = T, scale = T)
+  Xs <- scale(x_mat_original[1:n,], scale = F)
   
   c(beta_for_debias + omega_hat %*% (zeta_new - t(X_n1) %*% Xs %*% beta_for_debias /
                                        n) * sdxinv)
@@ -162,9 +167,9 @@ Compute_SE_Debias_Safe_Estimator <- function(y_centered,
   n <- length(y_centered)
   N <- nrow(x_mat_original) - n
   
-  Xs <- scale(x_mat_original[1:n, ], scale = F)
-  X_n1 <- scale(x_mat_original[1:n, ], center = T, scale = T)
-  XXs <- scale(XX2_in_zeta[1:n, ], scale = F)
+  Xs <- scale(x_mat_original[1:n,], scale = F)
+  X_n1 <- scale(x_mat_original[1:n,], center = T, scale = T)
+  XXs <- scale(XX2_in_zeta[1:n,], scale = F)
   
   AA <- diag(c(y_centered - Xs %*% beta_hat_for_var)) %*% X_n1
   Ar <- (AA - XXs %*% BB_in_zeta)
@@ -176,4 +181,71 @@ Compute_SE_Debias_Safe_Estimator <- function(y_centered,
   return(se1)
 }
 
-
+Estimate_Inference_Safe_Estimator <-
+  function(X,
+           y1,
+           zeta_list,
+           ratio,
+           Xs,
+           omegaHat,
+           sdxinv,
+           n,
+           beta_ll,
+           alpha,
+           beta_t)
+  {
+    # For estimation
+    dantzig_n2 <-
+      dantz(
+        X[1:n,],
+        y1,
+        zeta_list$Zeta_New,
+        lambda.min.value = ratio,
+        nlambda = 50,
+        clam = 1,
+        verbose = T
+      )
+    beta_n2 <- dantzig_n2$beta
+    chooselam <- cv_nonadd(
+      nfolds = 5,
+      XX2 = zeta_list$XX2,
+      Xs = Xs,
+      y1 = y1,
+      zetafull = zeta_list$Zeta_New,
+      BB = zeta_list$BB,
+      nlambda = 50,
+      ratio = ratio
+    )
+    clam <- chooselam$lambda.min
+    beta_for_estimation <- beta_n2[, clam]
+    
+    # For inference
+    beta_debiased <- Compute_Debias_Safe_Estimator(
+      beta_for_debias = beta_ll,
+      omega_hat = omegaHat,
+      zeta_new = zeta_list$Zeta_New,
+      x_mat_original = X,
+      sdxinv = sdxinv,
+      n = n
+    )
+    se_beta_debiased <- Compute_SE_Debias_Safe_Estimator(
+      y_centered = y1,
+      x_mat_original = X,
+      beta_hat_for_var = beta_ll,
+      omega_hat = omegaHat,
+      BB_in_zeta = zeta_list$BB,
+      XX2_in_zeta = zeta_list$XX2,
+      sdxinv = sdxinv
+    )
+    
+    lwb <- beta_debiased - qnorm(1 - alpha / 2) * se_beta_debiased
+    upb <- beta_debiased + qnorm(1 - alpha / 2) * se_beta_debiased
+    cp <- beta_t > lwb & beta_t < upb
+    return(
+      list(
+        betaHat = beta_for_estimation,
+        se = se_beta_debiased,
+        cp = cp
+      )
+    )
+  }

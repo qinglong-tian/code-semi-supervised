@@ -4,6 +4,8 @@ source("nec.R")
 setwd("../")
 source("aggregation_aux_functions.R")
 
+t0 <- Sys.time()
+
 ## The data setting: copy from the previous code; data generating
 # Factor levels
 n <- 200
@@ -133,6 +135,8 @@ se_beta_debiased <- Compute_SE_Debias_Safe_Estimator(
   XX2_in_zeta = zeta_new_two_models_list$XX2,
   sdxinv = sdxinv
 )
+
+Sys.time()-t0
 
 lwb <- beta_debiased-qnorm(1-alpha/2)*se_beta_debiased
 upb <- beta_debiased+qnorm(1-alpha/2)*se_beta_debiased
