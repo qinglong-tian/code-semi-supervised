@@ -194,30 +194,30 @@ Estimate_Inference_Safe_Estimator <-
            alpha,
            beta_t)
   {
-    # For estimation
-    dantzig_n2 <-
-      dantz(
-        X[1:n,],
-        y1,
-        zeta_list$Zeta_New,
-        lambda.min.value = ratio,
-        nlambda = 50,
-        clam = 1,
-        verbose = T
-      )
-    beta_n2 <- dantzig_n2$beta
-    chooselam <- cv_nonadd(
-      nfolds = 5,
-      XX2 = zeta_list$XX2,
-      Xs = Xs,
-      y1 = y1,
-      zetafull = zeta_list$Zeta_New,
-      BB = zeta_list$BB,
-      nlambda = 50,
-      ratio = ratio
-    )
-    clam <- chooselam$lambda.min
-    beta_for_estimation <- beta_n2[, clam]
+    # # For estimation
+    # dantzig_n2 <-
+    #   dantz(
+    #     X[1:n,],
+    #     y1,
+    #     zeta_list$Zeta_New,
+    #     lambda.min.value = ratio,
+    #     nlambda = 50,
+    #     clam = 1,
+    #     verbose = T
+    #   )
+    # beta_n2 <- dantzig_n2$beta
+    # chooselam <- cv_nonadd(
+    #   nfolds = 5,
+    #   XX2 = zeta_list$XX2,
+    #   Xs = Xs,
+    #   y1 = y1,
+    #   zetafull = zeta_list$Zeta_New,
+    #   BB = zeta_list$BB,
+    #   nlambda = 50,
+    #   ratio = ratio
+    # )
+    # clam <- chooselam$lambda.min
+    # beta_for_estimation <- beta_n2[, clam]
     
     # For inference
     beta_debiased <- Compute_Debias_Safe_Estimator(
@@ -243,7 +243,7 @@ Estimate_Inference_Safe_Estimator <-
     cp <- beta_t > lwb & beta_t < upb
     return(
       list(
-        betaHat = beta_for_estimation,
+        betaHat = beta_debiased,
         se = se_beta_debiased,
         cp = cp
       )
