@@ -4,7 +4,7 @@ source("nec.R")
 setwd("../")
 source("aggregation_aux_functions.R")
 
-B <- 3
+B <- 120
 
 # Factor levels
 n <- 200
@@ -15,6 +15,8 @@ ratio <- 0.08
 nlam <- 10
 df <- 5
 set.seed(7)
+
+t0 <- Sys.time()
 
 # True values of $\theta\ast$
 beta_t <- rep(0, p)
@@ -212,3 +214,5 @@ results <- mclapply(data_mc_list, function(data1)
   ))
 },
 mc.cores = detectCores())
+saveRDS(results, file = "run120timesN200.RDS")
+Sys.time()-t0
