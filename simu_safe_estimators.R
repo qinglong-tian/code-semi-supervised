@@ -41,7 +41,7 @@ results <- mclapply(data_mc_list, function(data1)
   
   # Fit Lasso Removing the 3rd Column
   Xs_E3 <- Xs
-  Xs_E3[, 3] <- 0
+  Xs_E3[, 3] <- Xs_E3[, 3]^3
   beta_ll_E3 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E3)
   zeta_new_E3 <- Compute_Zeta(
     y_centered = y1,
@@ -53,7 +53,7 @@ results <- mclapply(data_mc_list, function(data1)
   
   # Fit Lasso Removing the 4th Column
   Xs_E4 <- Xs
-  Xs_E4[, 3] <- 0
+  Xs_E4[, 1] <- Xs_E4[, 1]^2
   beta_ll_E4 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E4)
   zeta_new_E4 <- Compute_Zeta(
     y_centered = y1,

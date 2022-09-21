@@ -44,9 +44,9 @@ beta_ll <- Fit_Lasso(y_centered = y1, X_centered = Xs)
 
 ## The next two settings are used to compute "\hat{m}(\cdot)" in (3.15)
 ## Setting 1: (1,4,5,6)
-Xs_E3 <- Xs
-Xs_E3[, 3] <- 0
-beta_ll_E3 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E3)
+Xs_m1 <- Xs
+Xs_m1[, 3] <- Xs_m1[, 3]^3
+beta_ll_E3 <- Fit_Lasso(y_centered = y1, X_centered = Xs_m1)
 # Compute Zeta for the Lasso estimator with zero column 3
 zeta_new_E3 <-
   Compute_Zeta(
@@ -58,9 +58,9 @@ zeta_new_E3 <-
   )$Zeta_New
 
 ## Setting 2: (1,3,5,6)
-Xs_E4 <- Xs
-Xs_E4[, 4] <- 0
-beta_ll_E4 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E4)
+Xs_m2 <- Xs
+Xs_m2[, 1] <- Xs_m2[, 1]^2
+beta_ll_E4 <- Fit_Lasso(y_centered = y1, X_centered = Xs_m2)
 # Compute Zeta for the Lasso estimator with zero column 3
 zeta_new_E4 <-
   Compute_Zeta(
