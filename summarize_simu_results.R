@@ -11,7 +11,7 @@ compare_mse <- function(summary_simulation, index)
   })) -> mse34
   
   valVec <- c(mse3, mse4, mse34)
-  names(valVec) <- c("col3", "col3", "comb")
+  names(valVec) <- c("col3", "col4", "comb")
   
   return(valVec)
 }
