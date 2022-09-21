@@ -39,7 +39,7 @@ results <- mclapply(data_mc_list, function(data1)
   # Fit Lasso Using All Columns
   beta_ll <- Fit_Lasso(y_centered = y1, X_centered = Xs)
   
-  # Fit Lasso Removing the 3rd Column
+  # Fit Lasso Using the Cubic of the 3rd Column
   Xs_E3 <- Xs
   Xs_E3[, 3] <- Xs_E3[, 3]^3
   beta_ll_E3 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E3)
@@ -51,7 +51,7 @@ results <- mclapply(data_mc_list, function(data1)
     X_centered_all_data = Xs2
   )
   
-  # Fit Lasso Removing the 4th Column
+  # Fit Lasso Using the Square the 4th Column
   Xs_E4 <- Xs
   Xs_E4[, 1] <- Xs_E4[, 1]^2
   beta_ll_E4 <- Fit_Lasso(y_centered = y1, X_centered = Xs_E4)
