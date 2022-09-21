@@ -77,7 +77,7 @@ results <- mclapply(data_mc_list, function(data1)
   omegaHat <- Compute_Omega_Hat(X, n)
   
   ## Prepare for the Theta_S
-  ### No 3rd or 4th
+  ### m1+m2
   Estimate_Inference_Safe_Estimator(
     X = X,
     y1 = y1,
@@ -92,7 +92,7 @@ results <- mclapply(data_mc_list, function(data1)
     beta_t = beta_t
   ) -> est_inf_34
   
-  ### No 3rd
+  ### m1
   Estimate_Inference_Safe_Estimator(
     X = X,
     y1 = y1,
@@ -107,7 +107,7 @@ results <- mclapply(data_mc_list, function(data1)
     beta_t = beta_t
   ) -> est_inf_3
   
-  ### No 4th
+  ### m2
   Estimate_Inference_Safe_Estimator(
     X = X,
     y1 = y1,
