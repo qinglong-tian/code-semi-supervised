@@ -188,10 +188,26 @@ results <- mclapply(data_mc_list, function(data1)
     beta_t = beta_t
   ) -> est_inf_m2
   
+  ### additive
+  Estimate_Inference_Safe_Estimator(
+    X = X,
+    y1 = y1,
+    zeta_list = zeta_new_add,
+    ratio = ratio,
+    Xs = Xs,
+    omegaHat = omegaHat,
+    sdxinv = sdxinv,
+    n = n,
+    beta_ll = beta_ll,
+    alpha = alpha,
+    beta_t = beta_t
+  ) -> est_inf_add
+  
   return(list(
     rmv3 = est_inf_m1,
     rmv4 = est_inf_m2,
     rmv34 = est_inf_34,
+    add = est_inf_add,
     debias_lasso = debias_lasso
   ))
 },
