@@ -25,7 +25,7 @@ Compute_Noise_Lasso <- function(y_centered, X_centered, beta_lasso)
 Compute_Zeta <- function(y_centered,
                          X_centered,
                          beta_lasso_original,
-                         beta_lasso_for_m,
+                         predY_m,
                          X_centered_all_data)
   # Use "Zeta" to be consistent with the legacy code; which is actually $\xi$ for the the safe estimator
 {
@@ -37,7 +37,7 @@ Compute_Zeta <- function(y_centered,
   sdxinv <- 1 / sqrt(colSums(X_centered ^ 2) / (n - 1))
   newY <- diag(newy) %*% X_centered %*% diag(sdxinv)
   
-  Y_all <- X_centered_all_data %*% beta_lasso_for_m
+  Y_all <- predY_m
   XX2 <-
     diag(as.numeric(Y_all)) %*% X_centered_all_data %*% diag(sdxinv)
   XXs <- scale(XX2[1:n, ], scale = F)
@@ -68,7 +68,8 @@ Compute_Zeta <- function(y_centered,
 Compute_Zeta_Two_Models <- function(y_centered,
                                     X_centered,
                                     beta_lasso_origial,
-                                    beta_lasso_for_m_current,
+                                    predY_m1,
+                                    predY_m2,
                                     beta_lasso_for_m_next,
                                     X_centered_all_data)
   # Aggregate two models (in the safe estimators)
@@ -84,11 +85,11 @@ Compute_Zeta_Two_Models <- function(y_centered,
   newY <- diag(newy) %*% X_centered %*% diag(sdxinv)
   
   # The covariate part
-  Y_all_cur <- X_centered_all_data %*% beta_lasso_for_m_current
+  Y_all_cur <- predY_m1
   XX2_cur <-
     diag(c(Y_all_cur)) %*% X_centered_all_data %*% diag(sdxinv)
   
-  Y_all_next <- X_centered_all_data %*% beta_lasso_for_m_next
+  Y_all_next <- predY_m2
   XX2_next <-
     diag(c(Y_all_next)) %*% X_centered_all_data %*% diag(sdxinv)
   
